@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  cardservice-app:
+    build: .
+    restart: always
+    environment:
+      DB_URL: "jdbc:postgresql://greedobank_card-db:5432/greedobank_card?createDatabaseIfNotExist=true&autoReconnect=true"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      - greedobank_card-db
+
+  greedobank_card-db:
+    image: postgres:14
+    ports:
+      - '5432:5432'
+    environment:
+      LC_ALL: C.UTF-8
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: greedobank_card
+
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data

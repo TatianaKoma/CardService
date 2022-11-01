@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+       file: db/changelog/changesets/2022-07-20-000-create-table.sql
+  - include:
+       file: db/changelog/changesets/2022-08-19-000-add-column-currency.sql
+  - include:
+       file: db/changelog/changesets/2022-09-16-000-create-card-table.sql
+  - include:
+       file: db/changelog/changesets/2022-09-16-001-create-customer-table.sql
+  - include:
+       file: db/changelog/changesets/2022-10-10-000-alter-table-card.sql
+  - include:
+      file: db/changelog/changesets/2022-10-13-000-create-bank-account-table.sql
