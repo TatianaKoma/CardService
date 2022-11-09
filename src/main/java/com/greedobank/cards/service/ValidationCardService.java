@@ -1,7 +1,6 @@
 package com.greedobank.cards.service;
 
 import com.greedobank.cards.model.Card;
-import com.greedobank.cards.utils.ResponseMessages;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -9,6 +8,11 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.greedobank.cards.utils.ResponseMessages.VALID_CVV;
+import static com.greedobank.cards.utils.ResponseMessages.VALID_END_DATE;
+import static com.greedobank.cards.utils.ResponseMessages.VALID_NUMBER;
+import static com.greedobank.cards.utils.ResponseMessages.VALID_PIN;
 
 @Service
 public class ValidationCardService {
@@ -63,28 +67,28 @@ public class ValidationCardService {
 
         public Builder number() {
             boolean isValidNumber = isValidCardNumber(card.getNumber());
-            System.out.println(ResponseMessages.VALID_NUMBER + isValidNumber);
+            System.out.println(VALID_NUMBER.getDescription() + isValidNumber);
             isValid = isValid && isValidNumber;
             return this;
         }
 
         public Builder pin() {
             boolean isValidPin = isValidPinCode(card.getPin());
-            System.out.println(ResponseMessages.VALID_PIN + isValidPin);
+            System.out.println(VALID_PIN.getDescription() + isValidPin);
             isValid = isValid && isValidPin;
             return this;
         }
 
         public Builder cvv() {
             boolean isValidCvv = isValidCvvCode(card.getCvv());
-            System.out.println(ResponseMessages.VALID_CVV + isValidCvv);
+            System.out.println(VALID_CVV.getDescription() + isValidCvv);
             isValid = isValid && isValidCvv;
             return this;
         }
 
         public Builder endDate() {
             boolean isValidDate = isValidEndDate(card.getEndDate());
-            System.out.println(ResponseMessages.VALID_END_DATE + isValidDate);
+            System.out.println(VALID_END_DATE.getDescription() + isValidDate);
             isValid = isValid && isValidDate;
             return this;
         }

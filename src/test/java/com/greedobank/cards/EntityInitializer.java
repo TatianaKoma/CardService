@@ -134,11 +134,11 @@ public class EntityInitializer {
     public static CardTemplateCreationDTO getCardTemplateCreationDTO(int id) {
         Map<Integer, CardTemplateCreationDTO> cardTemplateCreationDTOMap = Map.of(
                 1, new CardTemplateCreationDTO("GOLD",
-                        new TariffDTO(15.0, 16.0, 17.0, "UAH")),
+                        new TariffDTO(15.0, 16.0, 17.0, "UAH"), 1),
                 2, new CardTemplateCreationDTO("PREMIUM",
-                        new TariffDTO(16.0, 17.0, 18.0, "UAH")),
+                        new TariffDTO(16.0, 17.0, 18.0, "UAH"), 1),
                 3, new CardTemplateCreationDTO("GOLD",
-                        new TariffDTO(17.0, 18.0, 19.0, "UAH"))
+                        new TariffDTO(17.0, 18.0, 19.0, "UAH"), 1)
         );
         return cardTemplateCreationDTOMap.get(id);
     }

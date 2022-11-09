@@ -6,7 +6,7 @@ import com.greedobank.cards.dto.CardCreationDTO;
 import com.greedobank.cards.dto.CardDTO;
 import com.greedobank.cards.dto.CardResetPinDTO;
 import com.greedobank.cards.exception.NotFoundException;
-import com.greedobank.cards.service.CardService;
+import com.greedobank.cards.facade.CardFacade;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ class CardControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private CardService service;
+    private CardFacade cardFacade;
 
     @Test
     @WithMockUser(username = "dzhmur@griddynamics.com", roles = "ADMIN")
@@ -58,7 +58,7 @@ class CardControllerTest {
                 """;
         CardDTO cardDTO = EntityInitializer.getCardDTO(1);
 
-        when(service.create(Mockito.any(CardCreationDTO.class))).thenReturn(cardDTO);
+        when(cardFacade.create(Mockito.any(CardCreationDTO.class))).thenReturn(cardDTO);
 
         RequestBuilder requestBuilder = post("/api/v1/card")
                 .accept(MediaType.APPLICATION_JSON)
@@ -89,7 +89,7 @@ class CardControllerTest {
                    """;
         CardDTO cardDTO = EntityInitializer.getCardDTO(2);
 
-        when(service.getById(CARD_ID)).thenReturn(cardDTO);
+        when(cardFacade.getById(CARD_ID)).thenReturn(cardDTO);
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/api/v1/card/{id}", 1).with(csrf())
@@ -108,7 +108,7 @@ class CardControllerTest {
                 }
                            """;
 
-        doThrow(new NotFoundException("Card with id 1 not found")).when(service).getById(1);
+        doThrow(new NotFoundException("Card with id 1 not found")).when(cardFacade).getById(1);
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/api/v1/card/{id}", 1)
@@ -123,7 +123,7 @@ class CardControllerTest {
         CardResetPinDTO cardResetPinDTO = EntityInitializer.getCardResetPinDTO(1);
         ObjectMapper mapper = new ObjectMapper();
 
-        doNothing().when(service).updatePin(CARD_ID, cardResetPinDTO);
+        doNothing().when(cardFacade).updatePin(CARD_ID, cardResetPinDTO);
 
         RequestBuilder requestBuilder = patch("/api/v1/card/{id}", 1)
                 .accept(MediaType.APPLICATION_JSON)
@@ -142,7 +142,7 @@ class CardControllerTest {
         CardResetPinDTO cardResetPinDTO = EntityInitializer.getCardResetPinDTO(3);
         ObjectMapper mapper = new ObjectMapper();
 
-        doNothing().when(service).updatePin(CARD_ID, cardResetPinDTO);
+        doNothing().when(cardFacade).updatePin(CARD_ID, cardResetPinDTO);
 
         RequestBuilder requestBuilder = patch("/api/v1/card/{id}", 1)
                 .accept(MediaType.APPLICATION_JSON)
@@ -161,7 +161,7 @@ class CardControllerTest {
         CardResetPinDTO cardResetPinDTO = new CardResetPinDTO("0101");
         ObjectMapper mapper = new ObjectMapper();
 
-        doNothing().when(service).updatePin(CARD_ID, cardResetPinDTO);
+        doNothing().when(cardFacade).updatePin(CARD_ID, cardResetPinDTO);
 
         RequestBuilder requestBuilder = patch("/api/v1/card/{id}", 1)
                 .accept(MediaType.APPLICATION_JSON)
@@ -236,7 +236,7 @@ class CardControllerTest {
         ObjectMapper mapper = new ObjectMapper();
 
         doThrow(new NotFoundException("Card with id 1 not found"))
-                .when(service).updatePin(CARD_ID, cardResetPinDTO);
+                .when(cardFacade).updatePin(CARD_ID, cardResetPinDTO);
 
         mockMvc.perform(patch("/api/v1/card/{id}", 1).with(csrf())
                         .content(mapper.writeValueAsString(cardResetPinDTO))

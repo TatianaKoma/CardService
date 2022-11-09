@@ -1,4 +1,4 @@
-package com.greedobank.cards;
+package com.greedobank.cards.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -11,7 +11,6 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @PropertySource("classpath:application.properties")
 public class MyConfig {
-
     @Bean
     public ObjectMapper mapper() {
         ObjectMapper objectMapper = new ObjectMapper();

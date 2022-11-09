@@ -11,7 +11,7 @@ import com.greedobank.cards.exception.InsufficientFundsException;
 import com.greedobank.cards.exception.InvalidInputException;
 import com.greedobank.cards.exception.NotActiveException;
 import com.greedobank.cards.exception.NotFoundException;
-import com.greedobank.cards.service.BankAccountService;
+import com.greedobank.cards.facade.BankAccountFacade;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +47,7 @@ class BankAccountControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private BankAccountService service;
+    private BankAccountFacade bankAccountFacade;
 
     @Test
     @WithMockUser(username = "dzhmur@griddynamics.com", roles = "ADMIN")
@@ -61,7 +61,7 @@ class BankAccountControllerTest {
                 """;
         BankAccountDTO bankAccountDTO = EntityInitializer.getBankAccountDTO(2);
 
-        when(service.create(Mockito.any(BankAccountCreationDTO.class))).thenReturn(bankAccountDTO);
+        when(bankAccountFacade.create(Mockito.any(BankAccountCreationDTO.class))).thenReturn(bankAccountDTO);
 
         RequestBuilder requestBuilder = post("/api/v1/account")
                 .accept(MediaType.APPLICATION_JSON)
@@ -199,7 +199,7 @@ class BankAccountControllerTest {
                            """;
         BankAccountCreationDTO bankAccountCreationDTO = new BankAccountCreationDTO("UAH", 5, 1);
 
-        doThrow(new NotFoundException("Card with id 5 not found")).when(service).create(bankAccountCreationDTO);
+        doThrow(new NotFoundException("Card with id 5 not found")).when(bankAccountFacade).create(bankAccountCreationDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/account").with(csrf())
                         .content(bankAccountRequest)
@@ -226,7 +226,7 @@ class BankAccountControllerTest {
                            """;
         BankAccountCreationDTO bankAccountCreationDTO = new BankAccountCreationDTO("UAH", 1, 10);
 
-        doThrow(new NotFoundException("Customer with id 10 was not found")).when(service).create(bankAccountCreationDTO);
+        doThrow(new NotFoundException("Customer with id 10 was not found")).when(bankAccountFacade).create(bankAccountCreationDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/account").with(csrf())
                         .content(bankAccountRequest)
@@ -275,7 +275,7 @@ class BankAccountControllerTest {
                    """;
         BankAccountDTO bankAccountDTO = EntityInitializer.getBankAccountDTO(3);
 
-        when(service.getById(BANK_ACCOUNT_ID)).thenReturn(bankAccountDTO);
+        when(bankAccountFacade.getById(BANK_ACCOUNT_ID)).thenReturn(bankAccountDTO);
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/api/v1/account/{id}", 1).with(csrf())
@@ -294,7 +294,7 @@ class BankAccountControllerTest {
                 }
                            """;
 
-        doThrow(new NotFoundException("Bank account with id 11 was not found")).when(service).getById(1);
+        doThrow(new NotFoundException("Bank account with id 11 was not found")).when(bankAccountFacade).getById(1);
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/api/v1/account/{id}", 1)
@@ -373,7 +373,7 @@ class BankAccountControllerTest {
                 new BankAccountReplenishDTO(new BigDecimal(1000), "111111");
 
         doThrow(new InvalidInputException("Card number is not valid"))
-                .when(service).replenishBalance(1, bankAccountReplenishDTO);
+                .when(bankAccountFacade).replenishBalance(1, bankAccountReplenishDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/account/replenishment/{id}", 1).with(csrf())
                         .content(bankAccountRequest)
@@ -401,7 +401,7 @@ class BankAccountControllerTest {
                 EntityInitializer.getBankAccountReplenishDTO();
 
         doThrow(new NotActiveException("Card is not active"))
-                .when(service).replenishBalance(1, bankAccountReplenishDTO);
+                .when(bankAccountFacade).replenishBalance(1, bankAccountReplenishDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/account/replenishment/{id}", 1).with(csrf())
                         .content(bankAccountRequest)
@@ -428,7 +428,7 @@ class BankAccountControllerTest {
         BankAccountReplenishDTO bankAccountReplenishDTO = EntityInitializer.getBankAccountReplenishDTO();
 
         doThrow(new NotFoundException("Card number 4731179262995095 does not match bank account"))
-                .when(service).replenishBalance(1, bankAccountReplenishDTO);
+                .when(bankAccountFacade).replenishBalance(1, bankAccountReplenishDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/account/replenishment/{id}", 1).with(csrf())
                         .content(bankAccountRequest)
@@ -450,7 +450,7 @@ class BankAccountControllerTest {
         BankAccountGetBalanceDTO bankAccountGetBalanceDTO = EntityInitializer.getBankAccountGetBalanceDTO();
         BankAccountReplenishDTO bankAccountReplenishDTO = EntityInitializer.getBankAccountReplenishDTO();
 
-        when(service.replenishBalance(1, bankAccountReplenishDTO)).thenReturn(bankAccountGetBalanceDTO);
+        when(bankAccountFacade.replenishBalance(1, bankAccountReplenishDTO)).thenReturn(bankAccountGetBalanceDTO);
 
         RequestBuilder requestBuilder = patch("/api/v1/account/replenishment/{id}", 1)
                 .accept(MediaType.APPLICATION_JSON)
@@ -476,7 +476,7 @@ class BankAccountControllerTest {
         BankAccountGetBalanceDTO bankAccountGetBalanceDTO = EntityInitializer.getBankAccountGetBalanceDTO();
         BankAccountWithdrawDTO bankAccountWithdrawDTO = EntityInitializer.getBankAccountWithdrawDTO();
 
-        when(service.withdrawFunds(2, bankAccountWithdrawDTO)).thenReturn(bankAccountGetBalanceDTO);
+        when(bankAccountFacade.withdrawFunds(2, bankAccountWithdrawDTO)).thenReturn(bankAccountGetBalanceDTO);
 
         RequestBuilder requestBuilder = patch("/api/v1/account/withdrawal/{id}", 2)
                 .accept(MediaType.APPLICATION_JSON)
@@ -507,7 +507,7 @@ class BankAccountControllerTest {
         BankAccountWithdrawDTO bankAccountWithdrawDTO = EntityInitializer.getBankAccountWithdrawDTO();
 
         doThrow(new InsufficientFundsException("Not enough funds in the account"))
-                .when(service).withdrawFunds(2, bankAccountWithdrawDTO);
+                .when(bankAccountFacade).withdrawFunds(2, bankAccountWithdrawDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/account/withdrawal/{id}", 2).with(csrf())
                         .content(bankAccountRequest)
@@ -535,7 +535,7 @@ class BankAccountControllerTest {
         BankAccountWithdrawDTO bankAccountWithdrawDTO = EntityInitializer.getBankAccountWithdrawDTO();
 
         doThrow(new NotFoundException("Pin code 1234 does not correct"))
-                .when(service).withdrawFunds(2, bankAccountWithdrawDTO);
+                .when(bankAccountFacade).withdrawFunds(2, bankAccountWithdrawDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/account/withdrawal/{id}", 2).with(csrf())
                         .content(bankAccountRequest)
@@ -560,7 +560,7 @@ class BankAccountControllerTest {
         BankAccountGetBalanceDTO bankAccountGetBalanceDTO = EntityInitializer.getBankAccountGetBalanceDTO();
         BankAccountWithdrawOnlineDTO bankAccountWithdrawOnlineDTO = EntityInitializer.getBankAccountWithdrawOnlineDTO();
 
-        when(service.withdrawFundsOnline(3, bankAccountWithdrawOnlineDTO)).thenReturn(bankAccountGetBalanceDTO);
+        when(bankAccountFacade.withdrawFundsOnline(3, bankAccountWithdrawOnlineDTO)).thenReturn(bankAccountGetBalanceDTO);
 
         RequestBuilder requestBuilder = patch("/api/v1/account/withdrawal/online/{id}", 3)
                 .accept(MediaType.APPLICATION_JSON)
@@ -593,7 +593,7 @@ class BankAccountControllerTest {
         BankAccountWithdrawOnlineDTO bankAccountWithdrawOnlineDTO = EntityInitializer.getBankAccountWithdrawOnlineDTO();
 
         doThrow(new NotFoundException("Cvv code 754 does not correct"))
-                .when(service).withdrawFundsOnline(3, bankAccountWithdrawOnlineDTO);
+                .when(bankAccountFacade).withdrawFundsOnline(3, bankAccountWithdrawOnlineDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/account/withdrawal/online/{id}", 3).with(csrf())
                         .content(bankAccountRequest)
@@ -623,7 +623,7 @@ class BankAccountControllerTest {
         BankAccountWithdrawOnlineDTO bankAccountWithdrawOnlineDTO = EntityInitializer.getBankAccountWithdrawOnlineDTO();
 
         doThrow(new NotFoundException("Expired date 09/25 does not correct"))
-                .when(service).withdrawFundsOnline(3, bankAccountWithdrawOnlineDTO);
+                .when(bankAccountFacade).withdrawFundsOnline(3, bankAccountWithdrawOnlineDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/account/withdrawal/online/{id}", 3).with(csrf())
                         .content(bankAccountRequest)

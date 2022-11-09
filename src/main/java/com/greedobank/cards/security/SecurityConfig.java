@@ -2,7 +2,7 @@ package com.greedobank.cards.security;
 
 import com.greedobank.cards.exception.MissedAuthenticationPoint;
 import com.greedobank.cards.exception.UnsuitableRoleHandler;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,15 +16,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-    @Autowired
-    private MissedAuthenticationPoint unauthorizedHandler;
-
-    @Autowired
-    private UnsuitableRoleHandler accessDeniedHandler;
+    private final MissedAuthenticationPoint unauthorizedHandler;
+    private final UnsuitableRoleHandler accessDeniedHandler;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {

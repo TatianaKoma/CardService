@@ -2,12 +2,10 @@ package com.greedobank.cards.service;
 
 import com.greedobank.cards.EntityInitializer;
 import com.greedobank.cards.dao.CardDAO;
-import com.greedobank.cards.dto.CardCreationDTO;
-import com.greedobank.cards.dto.CardDTO;
-import com.greedobank.cards.dto.CardResetPinDTO;
 import com.greedobank.cards.exception.NotFoundException;
-import com.greedobank.cards.mapper.CardMapper;
+import com.greedobank.cards.model.BankAccount;
 import com.greedobank.cards.model.Card;
+import com.greedobank.cards.utils.CurrencyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -15,8 +13,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
+import static com.greedobank.cards.EntityInitializer.getCardTemplate;
+import static com.greedobank.cards.EntityInitializer.getCustomer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,14 +27,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class CardServiceTest {
-    private static final int CARD_ID = 1;
-
     @InjectMocks
-    private com.greedobank.cards.service.CardService service;
+    private CardService service;
+
     @Mock
     private CardDAO cardDAO;
-    @Mock
-    private CardMapper mapper;
+
     @Spy
     private ValidationCardService validationCardService;
 
@@ -44,73 +43,75 @@ class CardServiceTest {
 
     @Test
     void shouldReturnCardTemplateDTOWhenCreate() {
-        CardCreationDTO cardCreationDTO = EntityInitializer.getCardCreationDTO(1);
-        CardDTO cardDTO = EntityInitializer.getCardDTO(1);
         Card card = EntityInitializer.getCard(1);
-        when(cardDAO.save(card)).thenReturn(card);
-        when(mapper.toCard(cardCreationDTO)).thenReturn(card);
-        when(mapper.toCardDTO(card)).thenReturn(cardDTO);
-        CardDTO createdCardDTO = service.create(cardCreationDTO);
 
-        assertNotNull(createdCardDTO);
-        assertEquals(cardDTO.id(), createdCardDTO.id());
-        assertEquals(cardDTO.firstName(), createdCardDTO.firstName());
-        assertEquals(cardDTO.lastName(), createdCardDTO.lastName());
-        assertEquals(cardDTO.number(), createdCardDTO.number());
-        assertEquals(cardDTO.pin(), createdCardDTO.pin());
-        assertEquals(cardDTO.cvv(), createdCardDTO.cvv());
-        assertEquals(cardDTO.endDate(), createdCardDTO.endDate());
-        assertEquals(cardDTO.active(), createdCardDTO.active());
-        assertEquals(cardDTO.currency(), createdCardDTO.currency());
+        when(cardDAO.save(card)).thenReturn(card);
+        Card createdCard = service.create(card);
+
+        assertNotNull(createdCard);
+        assertEquals(card.getId(), createdCard.getId());
+        assertEquals(card.getFirstName(), createdCard.getFirstName());
+        assertEquals(card.getLastName(), createdCard.getLastName());
+        assertEquals(card.getNumber(), createdCard.getNumber());
+        assertEquals(card.getPin(), createdCard.getPin());
+        assertEquals(card.getCvv(), createdCard.getCvv());
+        assertEquals(card.getEndDate(), createdCard.getEndDate());
+        assertEquals(card.isActive(), createdCard.isActive());
+        assertEquals(card.getCurrency(), createdCard.getCurrency());
     }
 
     @Test
-    void shouldReturnCardDTOWhenGetById() {
-        CardDTO cardDTO = EntityInitializer.getCardDTO(1);
+    void shouldReturnCardWhenGetById() {
         Card card = EntityInitializer.getCard(1);
 
-        when(mapper.toCardDTO(card)).thenReturn(cardDTO);
         when(cardDAO.findById(anyInt())).thenReturn(Optional.of(card));
-        CardDTO actualCardDTO = service.getById(cardDTO.id());
+        Card actualCard = service.getById(card.getId());
 
-        assertNotNull(actualCardDTO);
-        assertThat(actualCardDTO).isSameAs(cardDTO);
-        verify(cardDAO).findById(cardDTO.id());
+        assertNotNull(actualCard);
+        assertThat(actualCard).isSameAs(card);
+        verify(cardDAO).findById(card.getId());
     }
 
     @Test
     void shouldThrowNotFoundExceptionWhenGetByIdNotFound() {
-        when(cardDAO.findById(CARD_ID)).thenReturn(Optional.empty());
+        Card card = EntityInitializer.getCard(1);
+        when(cardDAO.findById(card.getId())).thenReturn(Optional.empty());
 
-        NotFoundException thrown = assertThrows(NotFoundException.class, () -> service.getById(CARD_ID));
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> service.getById(card.getId()));
 
         assertNotNull(thrown);
-        verify(cardDAO).findById(CARD_ID);
+        verify(cardDAO).findById(card.getId());
     }
 
     @Test
     void shouldUpdateByIdWhenUpdatePin() {
-        CardResetPinDTO cardResetPinDTO = EntityInitializer.getCardResetPinDTO(1);
         Card card = EntityInitializer.getCard(1);
+        Card newCard = new Card();
+        newCard.setPin("1234");
+        Card expectedCard =  new Card(1, "Tom", "Ford", "4731179262995095", "1234", "368",
+                OffsetDateTime.parse("2025-09-30T10:50:30+01:00"), true, CurrencyType.UAH, getCardTemplate(1),
+                getCustomer(1), new BankAccount());
 
         when(cardDAO.findById(anyInt())).thenReturn(Optional.of(card));
         when(cardDAO.save(card)).thenReturn(card);
-        service.updatePin(card.getId(), cardResetPinDTO);
+        service.updatePin(card.getId(),newCard);
 
-        assertEquals(cardResetPinDTO.pin(), card.getPin());
-        verify(cardDAO).findById(CARD_ID);
+        assertEquals(expectedCard.getPin(), card.getPin());
+        verify(cardDAO).findById(card.getId());
         verify(cardDAO).save(card);
     }
 
     @Test
     void shouldReturn404WhenUpdatePinNotFound() {
-        CardResetPinDTO cardResetPinDTO = EntityInitializer.getCardResetPinDTO(1);
+        Card card = EntityInitializer.getCard(1);
+        Card newCard = new Card();
+        newCard.setPin("1234");
 
-        when(cardDAO.findById(CARD_ID)).thenReturn(Optional.empty());
+        when(cardDAO.findById(card.getId())).thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
-                () -> service.updatePin(CARD_ID, cardResetPinDTO));
+                () -> service.updatePin(card.getId(),newCard));
         assertNotNull(thrown);
-        verify(cardDAO).findById(CARD_ID);
+        verify(cardDAO).findById(card.getId());
     }
 }

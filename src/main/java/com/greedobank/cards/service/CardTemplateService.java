@@ -1,73 +1,53 @@
 package com.greedobank.cards.service;
 
 import com.greedobank.cards.dao.CardTemplateDAO;
-import com.greedobank.cards.dto.CardTemplateCreationDTO;
-import com.greedobank.cards.dto.CardTemplateCreationUpdateDTO;
-import com.greedobank.cards.dto.CardTemplateDTO;
 import com.greedobank.cards.exception.NotFoundException;
-import com.greedobank.cards.mapper.CardTemplateMapper;
 import com.greedobank.cards.model.CardTemplate;
-import com.greedobank.cards.utils.CardType;
-import com.greedobank.cards.utils.CurrencyType;
-import com.greedobank.cards.utils.ResponseMessages;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import static com.greedobank.cards.utils.ResponseMessages.CARD_TEMPLATE_NOT_FOUND;
 
 @Service
+@RequiredArgsConstructor
 public class CardTemplateService {
-    private static final int USER_ID = 1;
-
     private final CardTemplateDAO cardTemplateDAO;
-    private final CardTemplateMapper mapper;
 
-    @Autowired
-    public CardTemplateService(CardTemplateDAO cardTemplateDAO, CardTemplateMapper mapper) {
-        this.cardTemplateDAO = cardTemplateDAO;
-        this.mapper = mapper;
-    }
-
-    public CardTemplateDTO create(CardTemplateCreationDTO cardTemplateCreationDTO) {
-        CardTemplate cardTemplate = mapper.toCardTemplate(cardTemplateCreationDTO);
-        cardTemplate.setCreatedAt(OffsetDateTime.now());
-        cardTemplate.setUpdatedAt(OffsetDateTime.now());
-        cardTemplate.setCreatedById(USER_ID);
+    public CardTemplate create(CardTemplate cardTemplate) {
         cardTemplateDAO.save(cardTemplate);
-        return mapper.toCardTemplateDTO(cardTemplate);
+        return cardTemplate;
     }
 
-    public void updateById(int id, CardTemplateCreationUpdateDTO forUpdateDTO) {
+    public void updateById(int id, CardTemplate forUpdateDTO) {
         CardTemplate cardTemplate = cardTemplateDAO.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format(ResponseMessages.CARD_TEMPLATE_NOT_FOUND, id)));
+                .orElseThrow(() -> new NotFoundException(String.format(CARD_TEMPLATE_NOT_FOUND.getDescription(), id)));
 
-        if (forUpdateDTO.type() != null) {
-            cardTemplate.setType(CardType.valueOf(forUpdateDTO.type()));
+        if (forUpdateDTO.getType() != null) {
+            cardTemplate.setType(forUpdateDTO.getType());
         }
-        if (forUpdateDTO.tariff().issueCost() != null) {
-            cardTemplate.setIssueCost(forUpdateDTO.tariff().issueCost());
+        if (forUpdateDTO.getIssueCost() != null) {
+            cardTemplate.setIssueCost(forUpdateDTO.getIssueCost());
         }
-        if (forUpdateDTO.tariff().serviceCost() != null) {
-            cardTemplate.setServiceCost(forUpdateDTO.tariff().serviceCost());
+        if (forUpdateDTO.getServiceCost() != null) {
+            cardTemplate.setServiceCost(forUpdateDTO.getServiceCost());
         }
-        if (forUpdateDTO.tariff().reissueCost() != null) {
-            cardTemplate.setReissueCost(forUpdateDTO.tariff().reissueCost());
+        if (forUpdateDTO.getReissueCost() != null) {
+            cardTemplate.setReissueCost(forUpdateDTO.getReissueCost());
         }
-        if (forUpdateDTO.tariff().currency() != null) {
-            cardTemplate.setCurrency(CurrencyType.valueOf(forUpdateDTO.tariff().currency()));
+        if (forUpdateDTO.getCurrency() != null) {
+            cardTemplate.setCurrency(forUpdateDTO.getCurrency());
         }
         cardTemplateDAO.save(cardTemplate);
     }
 
     public void deleteById(int id) {
         CardTemplate cardTemplate = cardTemplateDAO.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format(ResponseMessages.CARD_TEMPLATE_NOT_FOUND, id)));
+                .orElseThrow(() -> new NotFoundException(String.format(CARD_TEMPLATE_NOT_FOUND.getDescription(), id)));
         cardTemplateDAO.delete(cardTemplate);
     }
 
-    public CardTemplateDTO getById(int id) {
+    public CardTemplate getById(int id) {
         return cardTemplateDAO.findById(id)
-                .map(mapper::toCardTemplateDTO)
-                .orElseThrow(() -> new NotFoundException(String.format(ResponseMessages.CARD_TEMPLATE_NOT_FOUND, id)));
+                .orElseThrow(() -> new NotFoundException(String.format(CARD_TEMPLATE_NOT_FOUND.getDescription(), id)));
     }
 }

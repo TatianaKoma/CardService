@@ -7,7 +7,7 @@ import com.greedobank.cards.dto.CardTemplateCreationDTO;
 import com.greedobank.cards.dto.CardTemplateCreationUpdateDTO;
 import com.greedobank.cards.dto.CardTemplateDTO;
 import com.greedobank.cards.exception.NotFoundException;
-import com.greedobank.cards.service.CardTemplateService;
+import com.greedobank.cards.facade.CardTemplateFacade;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +47,7 @@ class CardTemplateControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private CardTemplateService service;
+    private CardTemplateFacade cardTemplateFacade;
 
     @Test
     @WithMockUser(username = "dzhmur@griddynamics.com", roles = "ADMIN")
@@ -60,12 +60,13 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         CardTemplateDTO cardTemplateDTO = EntityInitializer.getCardTemplateDTO(1);
 
-        when(service.create(Mockito.any(CardTemplateCreationDTO.class))).thenReturn(cardTemplateDTO);
+        when(cardTemplateFacade.create(Mockito.any(CardTemplateCreationDTO.class))).thenReturn(cardTemplateDTO);
 
         RequestBuilder requestBuilder = post("/api/v1/card-template")
                 .accept(MediaType.APPLICATION_JSON)
@@ -89,7 +90,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         String errorResponse = """
@@ -121,7 +123,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         String errorResponse = """
@@ -152,12 +155,13 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         CardTemplateDTO cardTemplateDTO = EntityInitializer.getCardTemplateDTO(1);
 
-        Mockito.when(service.create(Mockito.any(CardTemplateCreationDTO.class))).thenReturn(cardTemplateDTO);
+        Mockito.when(cardTemplateFacade.create(Mockito.any(CardTemplateCreationDTO.class))).thenReturn(cardTemplateDTO);
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders
                 .post("/api/v1/card-template")
@@ -182,7 +186,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         String errorResponse = """
@@ -213,7 +218,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         String errorResponse = """
@@ -244,7 +250,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         String errorResponse = """
@@ -275,7 +282,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "yyy"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         String errorResponse = """
@@ -306,7 +314,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         String errorResponse = """
@@ -334,12 +343,13 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
         CardTemplateDTO cardTemplateDTO = EntityInitializer.getCardTemplateDTO(1);
 
-        when(service.create(Mockito.any(CardTemplateCreationDTO.class))).thenReturn(cardTemplateDTO);
+        when(cardTemplateFacade.create(Mockito.any(CardTemplateCreationDTO.class))).thenReturn(cardTemplateDTO);
 
         RequestBuilder requestBuilder = post("/api/v1/card")
                 .accept(MediaType.APPLICATION_JSON)
@@ -372,7 +382,7 @@ class CardTemplateControllerTest {
                    """;
         CardTemplateDTO cardTemplateDTO = EntityInitializer.getCardTemplateDTO(1);
 
-        when(service.getById(CARD_TEMPLATE_ID)).thenReturn(cardTemplateDTO);
+        when(cardTemplateFacade.getById(CARD_TEMPLATE_ID)).thenReturn(cardTemplateDTO);
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/api/v1/card-template/{id}", 1).with(csrf())
@@ -391,7 +401,7 @@ class CardTemplateControllerTest {
                 }
                            """;
 
-        doThrow(new NotFoundException("Card-template with id 1 not found")).when(service).getById(1);
+        doThrow(new NotFoundException("Card-template with id 1 not found")).when(cardTemplateFacade).getById(1);
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/api/v1/card-template/{id}", 1)
@@ -404,7 +414,7 @@ class CardTemplateControllerTest {
     @WithMockUser(username = "dzhmur@griddynamics.com", roles = "ADMIN")
     void shouldReturn204WhenUpdate() throws Exception {
         CardTemplateCreationUpdateDTO cardTemplateCreationUpdateDTO = EntityInitializer.getCardTemplateCreationUpdateDTO();
-        doNothing().when(service).updateById(CARD_TEMPLATE_ID, cardTemplateCreationUpdateDTO);
+        doNothing().when(cardTemplateFacade).updateById(CARD_TEMPLATE_ID, cardTemplateCreationUpdateDTO);
         ObjectMapper mapper = new ObjectMapper();
 
         RequestBuilder requestBuilder = patch("/api/v1/card-template/{id}", 1)
@@ -430,7 +440,7 @@ class CardTemplateControllerTest {
         ObjectMapper mapper = new ObjectMapper();
 
         doThrow(new NotFoundException("Card-template with id 1 not found"))
-                .when(service).updateById(CARD_TEMPLATE_ID, cardTemplateCreationUpdateDTO);
+                .when(cardTemplateFacade).updateById(CARD_TEMPLATE_ID, cardTemplateCreationUpdateDTO);
 
         mockMvc.perform(patch("/api/v1/card-template/{id}", 1).with(csrf())
                         .content(mapper.writeValueAsString(cardTemplateCreationUpdateDTO))
@@ -456,7 +466,7 @@ class CardTemplateControllerTest {
                 }
                            """;
 
-        doThrow(new NotFoundException("Card-template with id 1 not found")).when(service).deleteById(CARD_TEMPLATE_ID);
+        doThrow(new NotFoundException("Card-template with id 1 not found")).when(cardTemplateFacade).deleteById(CARD_TEMPLATE_ID);
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/card-template/{id}", 1).with(csrf())
                         .accept(MediaType.APPLICATION_JSON))
@@ -474,7 +484,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
 
@@ -496,7 +507,8 @@ class CardTemplateControllerTest {
                     "serviceCost": 16,
                     "reissueCost": 17,
                     "currency": "UAH"
-                  }
+                  },
+                  "createdById": 1
                 }
                 """;
 

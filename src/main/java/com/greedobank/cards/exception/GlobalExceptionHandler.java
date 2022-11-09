@@ -1,6 +1,5 @@
 package com.greedobank.cards.exception;
 
-import com.greedobank.cards.utils.ResponseMessages;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -15,6 +14,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static com.greedobank.cards.utils.ResponseMessages.RESOURCE_NOT_FOUND;
+import static com.greedobank.cards.utils.ResponseMessages.VALIDATION_ERROR;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -28,21 +30,21 @@ public class GlobalExceptionHandler {
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .filter(Objects::nonNull)
                 .toList();
-        return new JsonErrorResponse(ResponseMessages.VALIDATION_ERROR, errors);
+        return new JsonErrorResponse(VALIDATION_ERROR.getDescription(), errors);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
     @ResponseBody
     public JsonErrorResponse handleNonReadable(HttpMessageNotReadableException exception) {
-        return new JsonErrorResponse(ResponseMessages.VALIDATION_ERROR, Arrays.asList(exception.getMessage()));
+        return new JsonErrorResponse(VALIDATION_ERROR.getDescription(), Arrays.asList(exception.getMessage()));
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
     @ResponseBody
     public JsonErrorResponse handleNoHandlerFound() {
-        return new JsonErrorResponse(ResponseMessages.RESOURCE_NOT_FOUND);
+        return new JsonErrorResponse(RESOURCE_NOT_FOUND.getDescription());
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -70,6 +72,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
     @ResponseBody
     public JsonErrorResponse handleInsufficientFundsException(InsufficientFundsException exception) {
+        return new JsonErrorResponse(exception.getMessage());
+    }
+
+    @ExceptionHandler(value = RestTemplateException.class)
+    public JsonErrorResponse handleRestTemplateException(RestTemplateException exception) {
         return new JsonErrorResponse(exception.getMessage());
     }
 }

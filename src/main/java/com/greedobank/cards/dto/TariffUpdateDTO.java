@@ -7,7 +7,6 @@ import javax.validation.constraints.Digits;
 import javax.validation.constraints.PositiveOrZero;
 
 public record TariffUpdateDTO(
-
         @PositiveOrZero(message = "IssueCost cannot be negative")
         @Digits(integer = 6, fraction = 2, message = "IssueCost cannot contain more than two digits of precision " +
                 "and more than 6 digits before it")

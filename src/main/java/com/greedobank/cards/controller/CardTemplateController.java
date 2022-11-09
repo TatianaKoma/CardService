@@ -3,10 +3,10 @@ package com.greedobank.cards.controller;
 import com.greedobank.cards.dto.CardTemplateCreationDTO;
 import com.greedobank.cards.dto.CardTemplateCreationUpdateDTO;
 import com.greedobank.cards.dto.CardTemplateDTO;
-import com.greedobank.cards.service.CardTemplateService;
+import com.greedobank.cards.facade.CardTemplateFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -23,29 +23,25 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 @RestController
+@RequiredArgsConstructor
 @Validated
 @RequestMapping(path = "/api/v1/card-template")
 @Tag(name = "Card-template", description = "Interaction with card-template")
 public class CardTemplateController {
-    private final CardTemplateService cardTemplateService;
-
-    @Autowired
-    public CardTemplateController(CardTemplateService cardTemplateService) {
-        this.cardTemplateService = cardTemplateService;
-    }
+    private final CardTemplateFacade cardTemplateFacade;
 
     @PostMapping
     @Operation(summary = "Create a card-template", description = "Lets create a card-template")
     @PreAuthorize("hasRole('ADMIN')")
     public CardTemplateDTO create(@Valid @RequestBody CardTemplateCreationDTO cardTemplateCreationDTO) {
-        return cardTemplateService.create(cardTemplateCreationDTO);
+        return cardTemplateFacade.create(cardTemplateCreationDTO);
     }
 
     @GetMapping(value = "/{id}")
     @Operation(summary = "Get the card-template by id", description = "Lets get the card-template by id")
     @PreAuthorize("isAuthenticated()")
     public CardTemplateDTO getById(@PathVariable("id") int id) {
-        return cardTemplateService.getById(id);
+        return cardTemplateFacade.getById(id);
     }
 
     @PatchMapping(value = "/{id}")
@@ -54,7 +50,7 @@ public class CardTemplateController {
     @PreAuthorize("hasRole('ADMIN')")
     public void update(@PathVariable("id") int id,
                        @Valid @RequestBody CardTemplateCreationUpdateDTO forUpdateDTO) {
-        cardTemplateService.updateById(id, forUpdateDTO);
+        cardTemplateFacade.updateById(id, forUpdateDTO);
     }
 
     @DeleteMapping(value = "/{id}")
@@ -62,6 +58,6 @@ public class CardTemplateController {
     @Operation(summary = "Delete the card-template by id", description = "Lets delete the card-template by id")
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable("id") int id) {
-        cardTemplateService.deleteById(id);
+        cardTemplateFacade.deleteById(id);
     }
 }

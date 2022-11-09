@@ -22,7 +22,6 @@ class CardTemplateMapperTest {
     void shouldReturnCardTemplateWhenToCardTemplate() {
         CardTemplateCreationDTO cardTemplateCreationDTO =
                 EntityInitializer.getCardTemplateCreationDTO(1);
-
         CardTemplate cardTemplate = mapper.toCardTemplate(cardTemplateCreationDTO);
 
         assertEquals(cardTemplateCreationDTO.type(), cardTemplate.getType().toString());
@@ -30,6 +29,7 @@ class CardTemplateMapperTest {
         assertEquals(cardTemplateCreationDTO.tariff().serviceCost(), cardTemplate.getServiceCost());
         assertEquals(cardTemplateCreationDTO.tariff().reissueCost(), cardTemplate.getReissueCost());
         assertEquals(CurrencyType.valueOf(cardTemplateCreationDTO.tariff().currency()), cardTemplate.getCurrency());
+        assertEquals(cardTemplateCreationDTO.createdById(),cardTemplate.getCreatedById());
     }
 
     @Test

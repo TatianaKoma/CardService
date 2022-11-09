@@ -1,10 +1,10 @@
 package com.greedobank.cards.security;
 
 import com.greedobank.cards.utils.JwtUtils;
-import com.greedobank.cards.utils.ResponseMessages;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +21,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.greedobank.cards.utils.ResponseMessages.AUTH_HEADER_NAME;
+import static com.greedobank.cards.utils.ResponseMessages.AUTH_HEADER_PREFIX;
+import static com.greedobank.cards.utils.ResponseMessages.TEMPLATE_MESSAGE;
+import static com.greedobank.cards.utils.ResponseMessages.TOKEN_EXPIRED;
+import static com.greedobank.cards.utils.ResponseMessages.TOKEN_WRONG;
+
+@Slf4j
 public class AuthTokenFilter extends OncePerRequestFilter {
     private static final int UNAUTHORIZED_STATUS = 401;
 
@@ -44,27 +51,27 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             } catch (SignatureException e) {
-                setResponse(ResponseMessages.TOKEN_WRONG, response);
+                setResponse(TOKEN_WRONG.getDescription(), response);
             } catch (ExpiredJwtException e) {
-                setResponse(ResponseMessages.TOKEN_EXPIRED, response);
+                setResponse(TOKEN_EXPIRED.getDescription(), response);
             } catch (UsernameNotFoundException | IllegalArgumentException e) {
-                logger.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
         }
         filterChain.doFilter(request, response);
     }
 
     private String getToken(HttpServletRequest request) {
-        String authHeader = request.getHeader(ResponseMessages.AUTH_HEADER_NAME);
+        String authHeader = request.getHeader(AUTH_HEADER_NAME.getDescription());
 
-        if (StringUtils.hasText(authHeader) && authHeader.startsWith(ResponseMessages.AUTH_HEADER_PREFIX))
-            return authHeader.substring(ResponseMessages.AUTH_HEADER_PREFIX.length());
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith(AUTH_HEADER_PREFIX.getDescription()))
+            return authHeader.substring(AUTH_HEADER_PREFIX.getDescription().length());
         return null;
     }
 
     private void setResponse(String message, HttpServletResponse response) throws IOException {
         response.setStatus(UNAUTHORIZED_STATUS);
-        response.getOutputStream().print(String.format(ResponseMessages.TEMPLATE_MESSAGE, message));
+        response.getOutputStream().print(String.format(TEMPLATE_MESSAGE.getDescription(), message));
         response.getOutputStream().close();
     }
 }

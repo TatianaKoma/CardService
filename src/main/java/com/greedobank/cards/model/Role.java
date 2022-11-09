@@ -11,7 +11,6 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class Role {
-
     private int id;
     private RoleTitle title;
 }

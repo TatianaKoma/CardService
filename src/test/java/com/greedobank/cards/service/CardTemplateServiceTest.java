@@ -2,11 +2,7 @@ package com.greedobank.cards.service;
 
 import com.greedobank.cards.EntityInitializer;
 import com.greedobank.cards.dao.CardTemplateDAO;
-import com.greedobank.cards.dto.CardTemplateCreationDTO;
-import com.greedobank.cards.dto.CardTemplateCreationUpdateDTO;
-import com.greedobank.cards.dto.CardTemplateDTO;
 import com.greedobank.cards.exception.NotFoundException;
-import com.greedobank.cards.mapper.CardTemplateMapper;
 import com.greedobank.cards.model.CardTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,14 +21,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class CardTemplateServiceTest {
-    private static final int CARD_TEMPLATE_ID = 1;
-
     @InjectMocks
     private CardTemplateService service;
+
     @Mock
     private CardTemplateDAO cardTemplateDAO;
-    @Mock
-    private CardTemplateMapper mapper;
 
     @BeforeEach
     void setUp() {
@@ -41,25 +34,21 @@ class CardTemplateServiceTest {
 
     @Test
     void shouldReturnCardTemplateDTOWhenCreate() {
-        CardTemplateCreationDTO cardTemplateCreationDTO = EntityInitializer.getCardTemplateCreationDTO(1);
-        CardTemplateDTO cardTemplateDTO = EntityInitializer.getCardTemplateDTO(1);
         CardTemplate cardTemplate = EntityInitializer.getCardTemplate(1);
 
         when(cardTemplateDAO.save(cardTemplate)).thenReturn(cardTemplate);
-        when(mapper.toCardTemplate(cardTemplateCreationDTO)).thenReturn(cardTemplate);
-        when(mapper.toCardTemplateDTO(cardTemplate)).thenReturn(cardTemplateDTO);
-        CardTemplateDTO createdCardTemplateDTO = service.create(cardTemplateCreationDTO);
+        CardTemplate createdCardTemplate = service.create(cardTemplate);
 
-        assertNotNull(createdCardTemplateDTO);
-        assertEquals(cardTemplateDTO.id(), createdCardTemplateDTO.id());
-        assertEquals(cardTemplateDTO.type(), createdCardTemplateDTO.type());
-        assertEquals(cardTemplateDTO.tariff().issueCost(), createdCardTemplateDTO.tariff().issueCost());
-        assertEquals(cardTemplateDTO.tariff().serviceCost(), createdCardTemplateDTO.tariff().serviceCost());
-        assertEquals(cardTemplateDTO.tariff().reissueCost(), createdCardTemplateDTO.tariff().reissueCost());
-        assertEquals(cardTemplateDTO.tariff().currency(), createdCardTemplateDTO.tariff().currency());
-        assertEquals(cardTemplateDTO.createdAt(), createdCardTemplateDTO.createdAt());
-        assertEquals(cardTemplateDTO.updatedAt(), createdCardTemplateDTO.updatedAt());
-        assertEquals(cardTemplateDTO.createdById(), createdCardTemplateDTO.createdById());
+        assertNotNull(createdCardTemplate);
+        assertEquals(cardTemplate.getId(), createdCardTemplate.getId());
+        assertEquals(cardTemplate.getType(), createdCardTemplate.getType());
+        assertEquals(cardTemplate.getIssueCost(), createdCardTemplate.getIssueCost());
+        assertEquals(cardTemplate.getServiceCost(), createdCardTemplate.getServiceCost());
+        assertEquals(cardTemplate.getReissueCost(), createdCardTemplate.getReissueCost());
+        assertEquals(cardTemplate.getCurrency(), createdCardTemplate.getCurrency());
+        assertEquals(cardTemplate.getCreatedAt(), createdCardTemplate.getCreatedAt());
+        assertEquals(cardTemplate.getUpdatedAt(), createdCardTemplate.getUpdatedAt());
+        assertEquals(cardTemplate.getCreatedById(), createdCardTemplate.getCreatedById());
     }
 
     @Test
@@ -67,67 +56,69 @@ class CardTemplateServiceTest {
         CardTemplate cardTemplate = EntityInitializer.getCardTemplate(1);
 
         when(cardTemplateDAO.findById(anyInt())).thenReturn(Optional.of(cardTemplate));
-        service.deleteById(CARD_TEMPLATE_ID);
+        service.deleteById(cardTemplate.getId());
 
         verify(cardTemplateDAO).delete(cardTemplate);
     }
 
     @Test
     void shouldThrowNotFoundExceptionWhenDeleteByIdNotFound() {
-        when(cardTemplateDAO.findById(CARD_TEMPLATE_ID)).thenReturn(Optional.empty());
+        CardTemplate cardTemplate = EntityInitializer.getCardTemplate(1);
+        when(cardTemplateDAO.findById(cardTemplate.getId())).thenReturn(Optional.empty());
 
-        NotFoundException thrown = assertThrows(NotFoundException.class, () -> service.deleteById(CARD_TEMPLATE_ID));
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> service.deleteById(cardTemplate.getId()));
         assertNotNull(thrown);
     }
 
     @Test
-    void shouldReturnCardTemplateDTOWhenGetById() {
-        CardTemplateDTO cardTemplateDTO = EntityInitializer.getCardTemplateDTO(1);
+    void shouldReturnCardTemplateWhenGetById() {
         CardTemplate cardTemplate = EntityInitializer.getCardTemplate(1);
 
-        when(mapper.toCardTemplateDTO(cardTemplate)).thenReturn(cardTemplateDTO);
         when(cardTemplateDAO.findById(anyInt())).thenReturn(Optional.of(cardTemplate));
-        CardTemplateDTO actualCardTemplateDTO = service.getById(cardTemplateDTO.id());
+        CardTemplate actualCardTemplate = service.getById(cardTemplate.getId());
 
-        assertNotNull(actualCardTemplateDTO);
-        assertThat(actualCardTemplateDTO).isSameAs(cardTemplateDTO);
-        verify(cardTemplateDAO).findById(cardTemplateDTO.id());
+        assertNotNull(actualCardTemplate);
+        assertThat(actualCardTemplate).isSameAs(cardTemplate);
+        verify(cardTemplateDAO).findById(cardTemplate.getId());
     }
 
     @Test
     void shouldThrowNotFoundExceptionWhenGetByIdNotFound() {
-        when(cardTemplateDAO.findById(CARD_TEMPLATE_ID)).thenReturn(Optional.empty());
-        NotFoundException thrown = assertThrows(NotFoundException.class, () -> service.getById(CARD_TEMPLATE_ID));
+        CardTemplate cardTemplate = EntityInitializer.getCardTemplate(2);
+
+        when(cardTemplateDAO.findById(cardTemplate.getId())).thenReturn(Optional.empty());
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> service.getById(cardTemplate.getId()));
 
         assertNotNull(thrown);
-        verify(cardTemplateDAO).findById(CARD_TEMPLATE_ID);
+        verify(cardTemplateDAO).findById(cardTemplate.getId());
     }
 
     @Test
     void shouldUpdateByIdWhenUpdate() {
-        CardTemplateCreationUpdateDTO cardTemplateUpdateDTO = EntityInitializer.getCardTemplateCreationUpdateDTO();
         CardTemplate cardTemplate = EntityInitializer.getCardTemplate(1);
-
+        CardTemplate cardTemplateForUpdate = EntityInitializer.getCardTemplate(2);
         when(cardTemplateDAO.findById(anyInt())).thenReturn(Optional.of(cardTemplate));
         when(cardTemplateDAO.save(cardTemplate)).thenReturn(cardTemplate);
-        service.updateById(cardTemplate.getId(), cardTemplateUpdateDTO);
+        service.updateById(cardTemplate.getId(), cardTemplateForUpdate);
 
-        assertEquals(cardTemplateUpdateDTO.type(), cardTemplate.getType().toString());
-        assertEquals(cardTemplateUpdateDTO.tariff().serviceCost(), cardTemplate.getServiceCost());
-        assertEquals(cardTemplateUpdateDTO.tariff().reissueCost(), cardTemplate.getReissueCost());
-        verify(cardTemplateDAO).findById(CARD_TEMPLATE_ID);
+        assertEquals(cardTemplateForUpdate.getType(), cardTemplate.getType());
+        assertEquals(cardTemplateForUpdate.getIssueCost(), cardTemplate.getIssueCost());
+        assertEquals(cardTemplateForUpdate.getServiceCost(), cardTemplate.getServiceCost());
+        assertEquals(cardTemplateForUpdate.getReissueCost(), cardTemplate.getReissueCost());
+        verify(cardTemplateDAO).findById(cardTemplate.getId());
         verify(cardTemplateDAO).save(cardTemplate);
     }
 
     @Test
     void shouldReturn404WhenUpdateNotFound() {
-        CardTemplateCreationUpdateDTO cardTemplateUpdateDTO = EntityInitializer.getCardTemplateCreationUpdateDTO();
+        CardTemplate cardTemplate = EntityInitializer.getCardTemplate(1);
+        CardTemplate cardTemplateForUpdate = EntityInitializer.getCardTemplate(2);
 
-        when(cardTemplateDAO.findById(CARD_TEMPLATE_ID)).thenReturn(Optional.empty());
+        when(cardTemplateDAO.findById(cardTemplate.getId())).thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
-                () -> service.updateById(CARD_TEMPLATE_ID, cardTemplateUpdateDTO));
+                () -> service.updateById(cardTemplate.getId(), cardTemplateForUpdate));
         assertNotNull(thrown);
-        verify(cardTemplateDAO).findById(CARD_TEMPLATE_ID);
+        verify(cardTemplateDAO).findById(cardTemplate.getId());
     }
 }

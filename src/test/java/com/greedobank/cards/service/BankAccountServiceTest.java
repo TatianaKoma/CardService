@@ -2,16 +2,10 @@ package com.greedobank.cards.service;
 
 import com.greedobank.cards.EntityInitializer;
 import com.greedobank.cards.dao.BankAccountDAO;
-import com.greedobank.cards.dto.BankAccountCreationDTO;
-import com.greedobank.cards.dto.BankAccountDTO;
-import com.greedobank.cards.dto.BankAccountGetBalanceDTO;
-import com.greedobank.cards.dto.BankAccountReplenishDTO;
-import com.greedobank.cards.dto.BankAccountWithdrawDTO;
-import com.greedobank.cards.dto.BankAccountWithdrawOnlineDTO;
 import com.greedobank.cards.exception.NotFoundException;
-import com.greedobank.cards.mapper.BankAccountMapper;
 import com.greedobank.cards.model.BankAccount;
 import com.greedobank.cards.model.Card;
+import com.greedobank.cards.utils.CurrencyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,9 +14,11 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
+import static com.greedobank.cards.EntityInitializer.getCard;
+import static com.greedobank.cards.EntityInitializer.getCustomer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,14 +28,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class BankAccountServiceTest {
-    private static final int BANK_ACCOUNT_ID = 1;
-
     @InjectMocks
     private BankAccountService service;
+
     @Mock
     private BankAccountDAO bankAccountDAO;
-    @Mock
-    private BankAccountMapper mapper;
+
     @Spy
     private ValidationCardService validationCardService;
 
@@ -49,145 +43,176 @@ class BankAccountServiceTest {
     }
 
     @Test
-    void shouldReturnBankAccountDTOWhenCreate() {
-        BankAccountDTO bankAccountDTO = EntityInitializer.getBankAccountDTO(1);
-        BankAccountCreationDTO bankAccountCreationDTO = EntityInitializer.getBankAccountCreationDTO(1);
+    void shouldReturnBankAccountWhenCreate() {
         BankAccount bankAccount = EntityInitializer.getBankAccount(1);
 
         when(bankAccountDAO.save(bankAccount)).thenReturn(bankAccount);
-        when(mapper.toBankAccount(bankAccountCreationDTO)).thenReturn(bankAccount);
-        when(mapper.toBankAccountDTO(bankAccount)).thenReturn(bankAccountDTO);
-        BankAccountDTO createdBankAccountDTO = service.create(bankAccountCreationDTO);
+        BankAccount createdBankAccount = service.create(bankAccount);
 
-        assertNotNull(createdBankAccountDTO);
-        assertEquals(bankAccountDTO.id(), createdBankAccountDTO.id());
-        assertEquals(bankAccountDTO.iban(), createdBankAccountDTO.iban());
-        assertEquals(bankAccountDTO.balance(), createdBankAccountDTO.balance());
-        assertEquals(bankAccountDTO.currency(), createdBankAccountDTO.currency());
-        assertEquals(bankAccountDTO.created_at(), createdBankAccountDTO.created_at());
-        assertEquals(bankAccountDTO.active(), createdBankAccountDTO.active());
+        assertNotNull(createdBankAccount);
+        assertEquals(bankAccount.getId(), createdBankAccount.getId());
+        assertEquals(bankAccount.getIban(), createdBankAccount.getIban());
+        assertEquals(bankAccount.getBalance(), createdBankAccount.getBalance());
+        assertEquals(bankAccount.getCurrency(), createdBankAccount.getCurrency());
+        assertEquals(bankAccount.getCreated_at(), createdBankAccount.getCreated_at());
+        assertEquals(bankAccount.isActive(), createdBankAccount.isActive());
     }
 
     @Test
-    void shouldReturnBankAccountDTOWhenGetById() {
-        BankAccountDTO bankAccountDTO = EntityInitializer.getBankAccountDTO(1);
+    void shouldReturnBankAccountWhenGetById() {
         BankAccount bankAccount = EntityInitializer.getBankAccount(1);
 
-        when(mapper.toBankAccountDTO(bankAccount)).thenReturn(bankAccountDTO);
         when(bankAccountDAO.findById(anyInt())).thenReturn(Optional.of(bankAccount));
-        BankAccountDTO actualBankAccountDTO = service.getById(bankAccountDTO.id());
+        BankAccount actualBankAccount = service.getById(bankAccount.getId());
 
-        assertNotNull(actualBankAccountDTO);
-        assertThat(actualBankAccountDTO).isSameAs(bankAccountDTO);
-        verify(bankAccountDAO).findById(bankAccountDTO.id());
+        assertNotNull(actualBankAccount);
+        assertThat(actualBankAccount).isSameAs(bankAccount);
+        verify(bankAccountDAO).findById(bankAccount.getId());
     }
 
     @Test
     void shouldThrowNotFoundExceptionWhenGetByIdNotFound() {
-        when(bankAccountDAO.findById(BANK_ACCOUNT_ID)).thenReturn(Optional.empty());
-        NotFoundException thrown = assertThrows(NotFoundException.class, () -> service.getById(BANK_ACCOUNT_ID));
+        BankAccount bankAccount = EntityInitializer.getBankAccount(1);
+
+        when(bankAccountDAO.findById(bankAccount.getId())).thenReturn(Optional.empty());
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> service.getById(bankAccount.getId()));
 
         assertNotNull(thrown);
-        verify(bankAccountDAO).findById(BANK_ACCOUNT_ID);
+        verify(bankAccountDAO).findById(bankAccount.getId());
     }
 
     @Test
     void shouldIncreaseBalanceWhenReplenish() {
-        Card card = EntityInitializer.getCard(1);
+        Card card = getCard(1);
         BankAccount bankAccount = EntityInitializer.getBankAccount(1);
-        BankAccountReplenishDTO bankAccountReplenishWithdrawDTO =
-                EntityInitializer.getBankAccountReplenishDTO();
-        BankAccountGetBalanceDTO bankAccountGetBalanceDTO = new BankAccountGetBalanceDTO(new BigDecimal(1000));
+        BankAccount newBankAccount = new BankAccount();
+        Card newCard = new Card();
+        newCard.setNumber("4731179262995095");
+        newBankAccount.setBalance(new BigDecimal(1000));
+        newBankAccount.setCard(newCard);
+        BankAccount expectedBankAccount = new BankAccount(1, "UA914731171976360791119690404", new BigDecimal(1000), CurrencyType.UAH,
+                OffsetDateTime.parse("2022-10-14T09:26:51.3090147+03:00"),
+                true, getCard(1), getCustomer(1));
 
         when(bankAccountDAO.findById(anyInt())).thenReturn(Optional.of(bankAccount));
         when(bankAccountDAO.save(bankAccount)).thenReturn(bankAccount);
-        when(mapper.toBankAccountGetBalanceDTO(bankAccount)).thenReturn(bankAccountGetBalanceDTO);
 
-        BankAccountGetBalanceDTO actualBankAccountGetBalance = service
-                .replenishBalance(BANK_ACCOUNT_ID, bankAccountReplenishWithdrawDTO);
-        assertEquals(bankAccountReplenishWithdrawDTO.cardNumber(), card.getNumber());
-        assertEquals(bankAccountGetBalanceDTO.balance(), actualBankAccountGetBalance.balance());
-        verify(bankAccountDAO).findById(BANK_ACCOUNT_ID);
+        BankAccount actualBankAccountGetBalance = service
+                .replenishBalance(bankAccount.getId(), newBankAccount);
+        assertEquals(newBankAccount.getCard().getNumber(), card.getNumber());
+        assertEquals(expectedBankAccount.getBalance(), actualBankAccountGetBalance.getBalance());
+        verify(bankAccountDAO).findById(bankAccount.getId());
         verify(bankAccountDAO).save(bankAccount);
     }
 
     @Test
     void shouldReturn404WhenReplenishNotFound() {
-        BankAccountReplenishDTO bankAccountReplenishDTO =
-                EntityInitializer.getBankAccountReplenishDTO();
-        when(bankAccountDAO.findById(BANK_ACCOUNT_ID)).thenReturn(Optional.empty());
+        BankAccount bankAccount = EntityInitializer.getBankAccount(1);
+        BankAccount newBankAccount = new BankAccount();
+        Card newCard = new Card();
+        newCard.setNumber("4731179262995095");
+        newBankAccount.setBalance(new BigDecimal(1000));
+        newBankAccount.setCard(newCard);
+
+        when(bankAccountDAO.findById(bankAccount.getId())).thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
-                () -> service.replenishBalance(BANK_ACCOUNT_ID, bankAccountReplenishDTO));
+                () -> service.replenishBalance(bankAccount.getId(), newBankAccount));
         assertNotNull(thrown);
-        verify(bankAccountDAO).findById(BANK_ACCOUNT_ID);
+        verify(bankAccountDAO).findById(bankAccount.getId());
     }
 
     @Test
     void shouldDecreaseBalanceWhenWithdraw() {
-        Card card = EntityInitializer.getCard(3);
+        Card card = getCard(3);
         BankAccount bankAccount = EntityInitializer.getBankAccount(3);
-        BankAccountWithdrawDTO bankAccountWithdrawDTO =
-                EntityInitializer.getBankAccountWithdrawDTO();
-        BankAccountGetBalanceDTO bankAccountGetBalanceDTO = new BankAccountGetBalanceDTO(new BigDecimal(1000));
+        BankAccount newBankAccount = new BankAccount();
+        Card newCard = new Card();
+        newCard.setNumber("4731174547276064");
+        newCard.setPin("1234");
+        newBankAccount.setBalance(new BigDecimal(1000));
+        newBankAccount.setCard(newCard);
+        BankAccount expectedBankAccount =  new BankAccount(3, "UA914731171976360791119690404", new BigDecimal(1500), CurrencyType.UAH,
+                OffsetDateTime.parse("2022-10-14T09:26:51.3090147+03:00"),
+                true, getCard(3), getCustomer(3));
 
-        when(bankAccountDAO.findById(anyInt())).thenReturn(Optional.of(bankAccount));
+        when(bankAccountDAO.findById(bankAccount.getId())).thenReturn(Optional.of(bankAccount));
         when(bankAccountDAO.save(bankAccount)).thenReturn(bankAccount);
-        when(mapper.toBankAccountGetBalanceDTO(bankAccount)).thenReturn(bankAccountGetBalanceDTO);
 
-        BankAccountGetBalanceDTO actualBankAccountGetBalance = service
-                .withdrawFunds(BANK_ACCOUNT_ID, bankAccountWithdrawDTO);
-        assertEquals(bankAccountWithdrawDTO.cardNumber(), card.getNumber());
-        assertEquals(bankAccountWithdrawDTO.pin(), card.getPin());
-        assertEquals(bankAccountGetBalanceDTO.balance(), actualBankAccountGetBalance.balance());
-        verify(bankAccountDAO).findById(BANK_ACCOUNT_ID);
+        BankAccount actualBankAccountGetBalance = service
+                .withdrawFunds(bankAccount.getId(), newBankAccount);
+        assertEquals(newBankAccount.getCard().getNumber(), card.getNumber());
+        assertEquals(newBankAccount.getCard().getPin(), card.getPin());
+        assertEquals(expectedBankAccount.getBalance(), actualBankAccountGetBalance.getBalance());
+        verify(bankAccountDAO).findById(bankAccount.getId());
         verify(bankAccountDAO).save(bankAccount);
     }
 
     @Test
     void shouldReturn404WhenWithdrawNotFound() {
-        BankAccountWithdrawDTO bankAccountWithdrawDTO =
-                EntityInitializer.getBankAccountWithdrawDTO();
-        when(bankAccountDAO.findById(BANK_ACCOUNT_ID)).thenReturn(Optional.empty());
+        BankAccount bankAccount = EntityInitializer.getBankAccount(3);
+        BankAccount newBankAccount = new BankAccount();
+        Card newCard = new Card();
+        newCard.setNumber("4731174547276064");
+        newCard.setPin("1234");
+        newBankAccount.setBalance(new BigDecimal(1000));
+        newBankAccount.setCard(newCard);
+
+        when(bankAccountDAO.findById(bankAccount.getId())).thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
-                () -> service.withdrawFunds(BANK_ACCOUNT_ID, bankAccountWithdrawDTO));
+                () -> service.withdrawFunds(bankAccount.getId(), newBankAccount));
         assertNotNull(thrown);
-        verify(bankAccountDAO).findById(BANK_ACCOUNT_ID);
+        verify(bankAccountDAO).findById(bankAccount.getId());
     }
 
     @Test
     void shouldDecreaseBalanceWhenWithdrawOnline() {
-        Card card = EntityInitializer.getCard(3);
+        Card card = getCard(3);
         BankAccount bankAccount = EntityInitializer.getBankAccount(3);
-        BankAccountWithdrawOnlineDTO bankAccountWithdrawOnlineDTO =
-                EntityInitializer.getBankAccountWithdrawOnlineDTO();
-        BankAccountGetBalanceDTO bankAccountGetBalanceDTO = new BankAccountGetBalanceDTO(new BigDecimal(1000));
+        BankAccount newBankAccount = new BankAccount();
+        Card newCard = new Card();
+        newCard.setNumber("4731174547276064");
+        newCard.setPin("1234");
+        newCard.setCvv("754");
+        newCard.setEndDate(OffsetDateTime.parse("2025-09-30T10:50:30+01:00"));
+        newBankAccount.setBalance(new BigDecimal(1000));
+        newBankAccount.setCard(newCard);
+        BankAccount expectedBankAccount =  new BankAccount(3, "UA914731171976360791119690404", new BigDecimal(1500), CurrencyType.UAH,
+                OffsetDateTime.parse("2022-10-14T09:26:51.3090147+03:00"),
+                true, getCard(3), getCustomer(3));
 
         when(bankAccountDAO.findById(anyInt())).thenReturn(Optional.of(bankAccount));
         when(bankAccountDAO.save(bankAccount)).thenReturn(bankAccount);
-        when(mapper.toBankAccountGetBalanceDTO(bankAccount)).thenReturn(bankAccountGetBalanceDTO);
 
-        BankAccountGetBalanceDTO actualBankAccountGetBalance = service
-                .withdrawFundsOnline(BANK_ACCOUNT_ID, bankAccountWithdrawOnlineDTO);
-        assertEquals(bankAccountWithdrawOnlineDTO.cardNumber(), card.getNumber());
-        assertEquals(bankAccountWithdrawOnlineDTO.pin(), card.getPin());
-        assertEquals(bankAccountWithdrawOnlineDTO.cvv(), card.getCvv());
-        assertEquals(bankAccountWithdrawOnlineDTO.endDate(), DateTimeFormatter.ofPattern("MM/yy").format(card.getEndDate()));
-        assertEquals(bankAccountGetBalanceDTO.balance(), actualBankAccountGetBalance.balance());
-        verify(bankAccountDAO).findById(BANK_ACCOUNT_ID);
+        BankAccount actualBankAccountGetBalance = service
+                .withdrawFundsOnline(bankAccount.getId(),newBankAccount);
+        assertEquals(newBankAccount.getCard().getNumber(), card.getNumber());
+        assertEquals(newBankAccount.getCard().getPin(), card.getPin());
+        assertEquals(newBankAccount.getCard().getCvv(), card.getCvv());
+        assertEquals(newBankAccount.getCard().getEndDate(), card.getEndDate());
+        assertEquals(expectedBankAccount.getBalance(), actualBankAccountGetBalance.getBalance());
+        verify(bankAccountDAO).findById(bankAccount.getId());
         verify(bankAccountDAO).save(bankAccount);
     }
 
     @Test
     void shouldReturn404WhenWithdrawOnlineNotFound() {
-        BankAccountWithdrawOnlineDTO bankAccountWithdrawOnlineDTO =
-                EntityInitializer.getBankAccountWithdrawOnlineDTO();
-        when(bankAccountDAO.findById(BANK_ACCOUNT_ID)).thenReturn(Optional.empty());
+        BankAccount bankAccount = EntityInitializer.getBankAccount(3);
+        BankAccount newBankAccount = new BankAccount();
+        Card newCard = new Card();
+        newCard.setNumber("4731174547276064");
+        newCard.setPin("1234");
+        newCard.setCvv("754");
+        newCard.setEndDate(OffsetDateTime.parse("2025-09-30T10:50:30+01:00"));
+        newBankAccount.setBalance(new BigDecimal(1000));
+        newBankAccount.setCard(newCard);
+
+        when(bankAccountDAO.findById(bankAccount.getId())).thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
-                () -> service.withdrawFundsOnline(BANK_ACCOUNT_ID, bankAccountWithdrawOnlineDTO));
+                () -> service.withdrawFundsOnline(bankAccount.getId(), newBankAccount));
         assertNotNull(thrown);
-        verify(bankAccountDAO).findById(BANK_ACCOUNT_ID);
+        verify(bankAccountDAO).findById(bankAccount.getId());
     }
 }

@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.greedobank.cards.utils.CardType;
 import com.greedobank.cards.utils.CurrencyType;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,7 +21,8 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class CardTemplate {
@@ -34,13 +36,13 @@ public class CardTemplate {
     private CardType type;
 
     @Column(name = "issue_cost")
-    private double issueCost;
+    private Double issueCost;
 
     @Column(name = "service_cost")
-    private double serviceCost;
+    private Double serviceCost;
 
     @Column(name = "reissue_cost")
-    private double reissueCost;
+    private Double reissueCost;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "currency_type")

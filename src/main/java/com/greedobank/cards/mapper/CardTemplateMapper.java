@@ -1,6 +1,7 @@
 package com.greedobank.cards.mapper;
 
 import com.greedobank.cards.dto.CardTemplateCreationDTO;
+import com.greedobank.cards.dto.CardTemplateCreationUpdateDTO;
 import com.greedobank.cards.dto.CardTemplateDTO;
 import com.greedobank.cards.dto.TariffDTO;
 import com.greedobank.cards.model.CardTemplate;
@@ -17,6 +18,16 @@ public class CardTemplateMapper {
         cardTemplate.setServiceCost(cardTemplateCreationDTO.tariff().serviceCost());
         cardTemplate.setReissueCost(cardTemplateCreationDTO.tariff().reissueCost());
         cardTemplate.setCurrency(CurrencyType.valueOf(cardTemplateCreationDTO.tariff().currency()));
+        cardTemplate.setCreatedById(cardTemplateCreationDTO.createdById());
+        return cardTemplate;
+    }
+
+    public CardTemplate toCardTemplate(CardTemplateCreationUpdateDTO cardTemplateCreationUpdateDTO) {
+        CardTemplate cardTemplate = new CardTemplate();
+        cardTemplate.setType(CardType.valueOf(cardTemplateCreationUpdateDTO.type()));
+        cardTemplate.setIssueCost(cardTemplateCreationUpdateDTO.tariff().issueCost());
+        cardTemplate.setServiceCost(cardTemplateCreationUpdateDTO.tariff().serviceCost());
+        cardTemplate.setReissueCost(cardTemplateCreationUpdateDTO.tariff().reissueCost());
         return cardTemplate;
     }
 
